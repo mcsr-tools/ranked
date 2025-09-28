@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, dracula;
+}
+
+@theme {
+  --font-minecraft: Minecraft;
+  --font-ranked: Ranked;
+  --color-twitch: #b9a3e3;
+  --color-youtube: #ff0000;
+  --color-discord: #5865f2;
+  --color-ranked: #9fda44;
+}
+
+@layer utilities {
+  .image-pixelated {
+    image-rendering: pixelated;
+  }
+}
+
+.github-corner:hover .octo-arm {
+  animation: octocat-wave 560ms ease-in-out;
+}
+
+@keyframes octocat-wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20%,
+  60% {
+    transform: rotate(-25deg);
+  }
+  40%,
+  80% {
+    transform: rotate(10deg);
+  }
+}
+
+@media (max-width: 500px) {
+  .github-corner:hover .octo-arm {
+    animation: none;
+  }
+  .github-corner .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+  }
+}
