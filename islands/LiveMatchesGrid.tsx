@@ -330,7 +330,7 @@ function Bust(
           type={props.timeline?.type || "overworld"}
         />
         <img
-          className="size-[100px] image-pixelated"
+          className="size-[100px] image-pixel-art"
           src={`https://minotar.net/bust/${props.user.nickname}/100`}
           alt={props.user.nickname}
         />

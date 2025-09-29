@@ -13,7 +13,9 @@
 }
 
 @layer utilities {
-  .image-pixelated {
+  /* https://auroratide.com/posts/pixelart-and-the-image-rendering-paradox/ */
+  .image-pixel-art {
+    image-rendering: crisp-edges;
     image-rendering: pixelated;
   }
 }

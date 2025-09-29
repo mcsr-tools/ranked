@@ -106,7 +106,9 @@ function ListItem(
         )}
       >
         <img
+          className="image-pixel-art"
           src={`https://minotar.net/avatar/${props.user.nickname}/40`}
+          alt={props.user.nickname}
         />
         {props.rankChange !== 0 &&
           (

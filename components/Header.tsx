@@ -9,7 +9,7 @@ export function Header() {
         <img
           src="/clock.webp"
           alt="Clock"
-          className="size-12"
+          className="size-12 image-pixel-art"
           data-fresh-disable-lock
         />
         <h1 className="text-4xl font-minecraft text-primary">

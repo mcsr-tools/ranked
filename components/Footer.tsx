@@ -8,7 +8,7 @@ export function Footer(props: { user: DataUserData }) {
         <img
           src="/clock.webp"
           alt="Clock"
-          className="size-12"
+          className="size-12 image-pixel-art"
           data-fresh-disable-lock
         />
         <p>
