@@ -35,3 +35,7 @@ export function findRank(elo: number): Rank | null {
 
   throw new Error("Unreachable");
 }
+
+export function isRank(val: unknown): val is Rank {
+  return typeof val === "string" && RANKS.includes(val as Rank);
+}

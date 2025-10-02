@@ -7,6 +7,7 @@ export function LiveMatches(
   props: {
     data: WithMeta<DataLive>;
     basePath: string;
+    searchParams: Record<string, string>;
   },
 ) {
   const ranks = new Set(
@@ -43,6 +44,7 @@ export function LiveMatches(
         ranks={[...ranks]}
         top150Filterable={top150Filterable}
         basePath={props.basePath}
+        searchParams={props.searchParams}
       />
     </div>
   );

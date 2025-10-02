@@ -25,7 +25,11 @@ export default async function HomePage(_req: Request, ctx: FreshContext) {
 
   return (
     <div>
-      <LiveMatches data={liveData} basePath={ctx.basePath} />
+      <LiveMatches
+        data={liveData}
+        basePath={ctx.basePath}
+        searchParams={Object.fromEntries(ctx.url.searchParams)}
+      />
     </div>
   );
 }

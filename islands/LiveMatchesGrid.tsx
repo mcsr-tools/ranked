@@ -1,7 +1,7 @@
-import { useComputed, useSignal } from "@preact/signals";
+import { useComputed, useSignal, useSignalEffect } from "@preact/signals";
 import clsx from "clsx";
 import { WithMeta } from "#/kv/meta.ts";
-import { findRank, Rank } from "#/mcsrranked/ranks.ts";
+import { findRank, isRank, Rank } from "#/mcsrranked/ranks.ts";
 import { DataLive, ObjectUserProfile } from "#/mcsrranked/types.ts";
 import { API_CACHE_MS_LIVE_MATCHES } from "#/mcsrranked/constants.ts";
 import { channelFromURL } from "#/twitch/helpers.ts";
@@ -15,17 +15,35 @@ export function LiveMatchesGrid(props: {
   ranks: Rank[];
   top150Filterable?: boolean;
   basePath: string;
+  searchParams: Record<string, string>;
 }) {
   const now = useSignal(Date.now());
 
-  const filteredRank = useSignal<null | Rank>(null);
-  const filteredTop150 = useSignal(false);
+  const filter = useSignal<
+    | { kind: "rank"; rank: Rank }
+    | { kind: "top-150" }
+    | null
+  >((() => {
+    const filter = props.searchParams["filter"];
+    switch (filter) {
+      case "rank": {
+        const rank = props.searchParams["rank"];
+        if (!isRank(rank) || !props.ranks.includes(rank)) break;
+        return { kind: filter, rank };
+      }
+      case "top-150": {
+        if (!props.top150Filterable) break;
+        return { kind: filter };
+      }
+    }
+    return null;
+  })());
 
   const liveMatches = useComputed(() =>
     props.data.liveMatches
       .filter((match) =>
-        filteredRank.value !== null
-          ? filteredRank.value === findRank(
+        filter.value?.kind === "rank"
+          ? filter.value.rank === findRank(
             Math.max(
               ...match.players
                 .map((player) => player.eloRate)
@@ -34,7 +52,7 @@ export function LiveMatchesGrid(props: {
           )
           : true
       ).filter((match) =>
-        filteredTop150.value
+        filter.value?.kind === "top-150"
           ? match.players
             .map((player) => player.eloRank)
             .filter(isInteger)
@@ -42,31 +60,66 @@ export function LiveMatchesGrid(props: {
           : true
       )
   );
+
+  useSignalEffect(() => {
+    const params = new URLSearchParams(globalThis.window.location.search);
+
+    params.delete("rank");
+    params.delete("filter");
+
+    if (filter.value) {
+      params.set("filter", encodeURIComponent(filter.value.kind));
+      if (filter.value.kind === "rank") {
+        params.set("rank", encodeURIComponent(filter.value.rank));
+      }
+    }
+
+    const url = new URL(globalThis.window.location.href);
+    url.search = params.toString();
+
+    globalThis.history.replaceState(null, "", url);
+  });
+
   return (
     <>
       <div className="flex flex-col md:flex-row md:items-top gap-2 mt-4">
         <div className="flex gap-1 items-center flex-wrap">
-          {props.ranks && (
-            <FilterRanks
-              ranks={props.ranks}
-              value={filteredRank.value}
-              basePath={props.basePath}
-              onChange={(rank) => {
-                filteredTop150.value = false;
-                filteredRank.value = filteredRank.peek() === rank ? null : rank;
-              }}
-            />
-          )}
-          {props.top150Filterable &&
-            (
-              <FilterTop150
-                value={filteredTop150.value}
-                onChange={(value) => {
-                  filteredRank.value = null;
-                  filteredTop150.value = value;
+          <div className="join">
+            {props.ranks.length > 0 && (
+              <FilterRanks
+                ranks={props.ranks}
+                value={filter.value?.kind === "rank" ? filter.value.rank : null}
+                basePath={props.basePath}
+                onChange={(rank) => {
+                  if (
+                    filter.value?.kind === "rank" && filter.value.rank === rank
+                  ) {
+                    filter.value = null;
+                  } else {
+                    filter.value = {
+                      kind: "rank",
+                      rank,
+                    };
+                  }
                 }}
               />
             )}
+            {props.top150Filterable &&
+              (
+                <FilterTop150
+                  value={filter.value?.kind === "top-150"}
+                  onChange={(value) => {
+                    if (value) {
+                      filter.value = {
+                        kind: "top-150",
+                      };
+                    } else {
+                      filter.value = null;
+                    }
+                  }}
+                />
+              )}
+          </div>
           {liveMatches.value.length > 0 &&
             (
               <a
@@ -189,11 +242,11 @@ function FilterRanks(props: {
   onChange: (rank: Rank) => void;
 }) {
   return (
-    <div className="join">
+    <>
       {props.ranks.map((rank) => (
         <button
           className={clsx(
-            "btn btn-sm btn-neutral join-item",
+            "btn btn-sm btn-soft join-item",
             props.value === rank && "btn-active",
           )}
           type="button"
@@ -201,16 +254,13 @@ function FilterRanks(props: {
         >
           <RankImage
             basePath={props.basePath}
-            className={clsx(
-              "size-5",
-              props.value !== rank && "grayscale-50",
-            )}
+            className="size-5"
             rank={rank}
             data-fresh-disable-lock
           />
         </button>
       ))}
-    </div>
+    </>
   );
 }
 
@@ -221,7 +271,7 @@ function FilterTop150(props: {
   return (
     <button
       className={clsx(
-        "btn btn-sm btn-neutral",
+        "btn btn-sm btn-soft join-item",
         props.value && "btn-active",
       )}
       type="button"
