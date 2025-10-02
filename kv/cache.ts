@@ -9,9 +9,9 @@ export async function cached<T extends object>(opts: {
 }): Promise<WithMeta<T>> {
   const cache = await kv.get<T>(opts.key);
 
-  if (cache.value && hasMeta(cache.value) && !isExpired(cache.value)) {
+  if (cache.value !== null && hasMeta(cache.value) && !isExpired(cache.value)) {
     console.debug(`${formatKey(opts.key)} cache hit`);
-    return cache.value!;
+    return cache.value;
   }
   console.debug(`${formatKey(opts.key)} cache expired`);
 

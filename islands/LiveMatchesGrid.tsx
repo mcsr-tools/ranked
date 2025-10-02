@@ -5,7 +5,7 @@ import { findRank, Rank } from "#/mcsrranked/ranks.ts";
 import { DataLive, ObjectUserProfile } from "#/mcsrranked/types.ts";
 import { API_CACHE_MS_LIVE_MATCHES } from "#/mcsrranked/constants.ts";
 import { channelFromURL } from "#/twitch/helpers.ts";
-import { isNumber } from "#/lib/filter.ts";
+import { isInteger } from "#/lib/filter.ts";
 import { RankImage } from "#/components/ui/mod.ts";
 import { RelativeTime } from "./RelativeTime.tsx";
 import { LastUpdated } from "./LastUpdated.tsx";
@@ -29,7 +29,7 @@ export function LiveMatchesGrid(props: {
             Math.max(
               ...match.players
                 .map((player) => player.eloRate)
-                .filter(isNumber),
+                .filter(isInteger),
             ),
           )
           : true
@@ -37,7 +37,7 @@ export function LiveMatchesGrid(props: {
         filteredTop150.value
           ? match.players
             .map((player) => player.eloRank)
-            .filter(isNumber)
+            .filter(isInteger)
             .find((rank) => rank <= 150)
           : true
       )
@@ -119,25 +119,32 @@ function Match(props: {
   liveDataLastUpdatedAt: number;
   basePath: string;
 }) {
+  const rank = findRank(
+    Math.max(
+      ...props.match.players
+        .map((player) => player.eloRate)
+        .filter(isInteger),
+    ),
+  );
+
   return (
     <div className="w-full sm:w-auto">
       <article className="card bg-neutral shadow-sm w-full sm:w-auto">
         <div className="relative card-body">
           <div className="flex flex-col justify-center items-center gap-1">
-            {(props.match.players[0].eloRate ||
-              props.match.players[1].eloRate) &&
-              (
+            {rank
+              ? (
                 <RankImage
                   className="size-7"
-                  rank={findRank(
-                    Math.max(
-                      ...props.match.players.map((player) => player.eloRate)
-                        .filter(isNumber),
-                    ),
-                  )}
+                  rank={rank}
                   basePath={props.basePath}
                   data-fresh-disable-lock
                 />
+              )
+              : (
+                <span className="h-7 text-center font-ranked text-lg">
+                  ???
+                </span>
               )}
             <p className="text-xs text-neutral-300">
               Started{" "}

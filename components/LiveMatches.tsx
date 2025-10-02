@@ -1,6 +1,6 @@
 import { DataLive, findRank } from "#/mcsrranked/mod.ts";
 import { WithMeta } from "#/kv/mod.ts";
-import { isNumber } from "#/lib/filter.ts";
+import { isInteger, isNotNullable } from "#/lib/filter.ts";
 import { LiveMatchesGrid } from "#/islands/LiveMatchesGrid.tsx";
 
 export function LiveMatches(
@@ -14,17 +14,18 @@ export function LiveMatches(
       .map((match) =>
         Math.max(
           ...match.players.map((player) => player.eloRate)
-            .filter(isNumber),
+            .filter(isInteger),
         )
       )
       .filter(Number.isFinite)
       .sort((a, b) => b - a)
-      .map(findRank),
+      .map(findRank)
+      .filter(isNotNullable),
   );
 
   const top150Filterable = props.data.liveMatches
     .flatMap((match) =>
-      match.players.map((player) => player.eloRank).filter(isNumber)
+      match.players.map((player) => player.eloRank).filter(isInteger)
     )
     .find((rank) => rank <= 150) !== undefined;
 

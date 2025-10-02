@@ -32,7 +32,7 @@ export async function getLeaderboardWithStreams() {
     prevLbNorm[_.uuid]?.at(0)?.eloRank! - _.eloRank! || 0
   );
 
-  const streams = await fetchStreams(twitchToken!.access_token, {
+  const streams = await fetchStreams(twitchToken.access_token, {
     // FIXME: Union types not working correctly without using ... TS bug?
     userLogins: [...leaderboard.users]
       .filter((_) => _.connections.twitch)

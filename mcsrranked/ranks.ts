@@ -7,10 +7,11 @@ export const RANKS = [
   "Diamond",
   "Netherite",
 ] as const;
+
 export type Rank = typeof RANKS[number];
 
 /** https://wiki.mcsrranked.com/gameplay/elo_and_ranks#ranks */
-const EloRank = {
+const RANK_ELO_MAX = {
   Coal: 599,
   Iron: 899,
   Gold: 1199,
@@ -19,13 +20,18 @@ const EloRank = {
   Netherite: Infinity,
 } satisfies Record<Rank, number>;
 
-export function findRank(elo: number) {
-  let min = 0;
-  for (let i = 0; i < RANKS.length; i++) {
-    if (elo > min && elo <= EloRank[RANKS[i]]) {
-      return RANKS[i];
-    }
-    min = EloRank[RANKS[i]];
+export function findRank(elo: number): Rank | null {
+  if (elo < 0) {
+    return null;
   }
+
+  let min = 0;
+  for (const rank of RANKS) {
+    if (elo > min && elo <= RANK_ELO_MAX[rank]) {
+      return rank;
+    }
+    min = RANK_ELO_MAX[rank];
+  }
+
   throw new Error("Unreachable");
 }
