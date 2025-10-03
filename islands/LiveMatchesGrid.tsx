@@ -5,7 +5,7 @@ import { findRank, isRank, Rank } from "#/mcsrranked/ranks.ts";
 import { DataLive, ObjectUserProfile } from "#/mcsrranked/types.ts";
 import { API_CACHE_MS_LIVE_MATCHES } from "#/mcsrranked/constants.ts";
 import { channelFromURL } from "#/twitch/helpers.ts";
-import { isInteger } from "#/lib/filter.ts";
+import { isInteger, isNotNullable } from "#/lib/filter.ts";
 import { RankImage } from "#/components/ui/mod.ts";
 import { RelativeTime } from "./RelativeTime.tsx";
 import { LastUpdated } from "./LastUpdated.tsx";
@@ -122,26 +122,22 @@ export function LiveMatchesGrid(props: {
           </div>
           {liveMatches.value.length > 0 &&
             (
-              <a
-                className="btn btn-sm bg-twitch text-black"
-                href={`https://multitwitch.tv/${
-                  liveMatches.value.flatMap((match) =>
-                    Object.values(match.data).map((data) => data.liveUrl)
-                      .filter((
-                        url,
-                      ): url is string => !!url).map(channelFromURL)
-                  ).join("/")
-                }`}
-                target="_blank"
-              >
-                <img
-                  className="fill-twitch size-5"
-                  src="brands/twitch.svg"
-                  alt="Twitch"
-                  data-fresh-disable-lock
-                />
-                multitwitch
-              </a>
+              <MultitwitchLink
+                players={liveMatches.value
+                  .flatMap((match) =>
+                    match.players.map((player) => ({
+                      player,
+                      liveUrl: match.data[player.uuid].liveUrl,
+                    }))
+                  )
+                  .filter((it): it is typeof it & { liveUrl: string } =>
+                    isNotNullable(it.liveUrl)
+                  )
+                  .map(({ player, liveUrl }) => ({
+                    twitchChannel: channelFromURL(liveUrl),
+                    mcNickname: player.nickname,
+                  }))}
+              />
             )}
         </div>
         {props.data._updatedAt && !!props.data.liveMatches.length && (
@@ -474,5 +470,57 @@ function TimelineImage(props: {
       }}
       data-timeline={props.type}
     />
+  );
+}
+
+function MultitwitchLink(props: {
+  players: {
+    twitchChannel: string;
+    mcNickname: string;
+  }[];
+}) {
+  const LENGTH = 3;
+
+  return (
+    <a
+      className="btn btn-sm bg-twitch text-black"
+      href={`https://multitwitch.tv/${
+        props.players.map((player) => player.twitchChannel).join("/")
+      }`}
+      target="_blank"
+    >
+      <img
+        className="fill-twitch size-5"
+        src="brands/twitch.svg"
+        alt="Twitch"
+        data-fresh-disable-lock
+      />
+      multitwitch
+      <div className="avatar-group -space-x-3">
+        {props.players
+          .slice(0, LENGTH)
+          .map(({ mcNickname }) => (
+            <div className="avatar border-2" key={mcNickname}>
+              <div className="h-5">
+                <img
+                  className="image-pixel-art"
+                  src={`https://minotar.net/avatar/${mcNickname}/40`}
+                  alt={mcNickname}
+                />
+              </div>
+            </div>
+          ))}
+        {props.players.length > LENGTH &&
+          (
+            <div className="avatar avatar-placeholder border-2">
+              <div className="bg-neutral text-neutral-content h-5 text-[9px]">
+                <span>
+                  +{props.players.length - LENGTH}
+                </span>
+              </div>
+            </div>
+          )}
+      </div>
+    </a>
   );
 }
