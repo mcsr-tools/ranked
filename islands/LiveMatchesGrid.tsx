@@ -176,10 +176,26 @@ function Match(props: {
     ),
   );
 
+  const timeline = useTimeline(props.match);
+
   return (
     <div className="w-full sm:w-auto">
       <article className="card bg-neutral shadow-sm w-full sm:w-auto">
-        <div className="relative card-body">
+        <div
+          className={clsx(
+            `relative card-body rounded-2xl`,
+            timeline.kind === "DIFF"
+              ? timeline.diff <= 0
+                ? "from-success/15 hover:via-50% via-30% via-neutral bg-linear-to-r"
+                : "from-warning/15 hover:via-50% via-30% via-neutral bg-linear-to-r"
+              : null,
+            timeline.kind === "GAPPED"
+              ? timeline.gapped
+                ? "from-error/15 hover:via-50% via-30% via-neutral bg-linear-to-r"
+                : "from-error/15 hover:via-50% via-30% via-neutral bg-linear-to-l"
+              : null,
+          )}
+        >
           <div className="flex flex-col justify-center items-center gap-1">
             {rank
               ? (
@@ -319,38 +335,29 @@ function Divider(props: {
 function DividerTimeDelta(props: {
   match: DataLive["liveMatches"][0];
 }) {
-  const p1 = props.match.data[props.match.players[0].uuid];
-  const p2 = props.match.data[props.match.players[1].uuid];
+  const timeline = useTimeline(props.match);
 
-  if (p1.timeline?.type !== p2.timeline?.type) {
+  if (timeline.kind === "GAPPED") {
     return <span className="text-error italic text-lg">GAPPED</span>;
   }
 
-  if (!p1.timeline || !p2.timeline) {
+  if (timeline.kind === "NEW") {
     return <span className="text-info italic text-lg">NEW</span>;
-  }
-
-  let diff = Math.abs(p1.timeline.time - p2.timeline.time);
-  if (p1.timeline.time < p2.timeline.time) {
-    diff = -diff;
   }
 
   return (
     <>
-      {p1.timeline && p2.timeline && diff &&
-        (
-          <span>
-            <span
-              className={clsx(
-                "text-lg",
-                diff < 0 ? "text-success" : "text-warning",
-              )}
-            >
-              {diff < 0 ? "-" : "+"}
-              {(Math.abs(diff) / 1000).toFixed(1)}s
-            </span>
-          </span>
-        )}
+      <span>
+        <span
+          className={clsx(
+            "text-lg",
+            timeline.diff < 0 ? "text-success" : "text-warning",
+          )}
+        >
+          {timeline.diff < 0 ? "-" : "+"}
+          {(Math.abs(timeline.diff) / 1000).toFixed(1)}s
+        </span>
+      </span>
     </>
   );
 }
@@ -380,7 +387,7 @@ function Bust(
               : "indicator-middle indicator-start",
           )}
           basePath={props.basePath}
-          type={props.timeline?.type || "overworld"}
+          timeline={props.timeline?.type || "overworld"}
         />
         <img
           className={clsx(
@@ -440,42 +447,95 @@ function Bust(
   );
 }
 
+const TIMELINES = {
+  "overworld": {
+    ord: 10,
+    spriteCoords: [1, 1],
+  },
+  "story.enter_the_nether": {
+    ord: 20,
+    spriteCoords: [2, 3],
+  },
+  "nether.find_bastion": {
+    ord: 30,
+    spriteCoords: [3, 3],
+  },
+  "nether.find_fortress": {
+    ord: 40,
+    spriteCoords: [4, 3],
+  },
+  "projectelo.timeline.blind_travel": {
+    ord: 50,
+    spriteCoords: [1, 4],
+  },
+  "story.follow_ender_eye": {
+    ord: 60,
+    spriteCoords: [2, 4],
+  },
+  "story.enter_the_end": {
+    ord: 70,
+    spriteCoords: [3, 4],
+  },
+} as const;
+
 function TimelineImage(props: {
   className?: string;
   basePath: string;
-  type: string;
+  timeline: string;
 }) {
-  const lut: Record<string, [number, number]> = {
-    "overworld": [1, 1],
-    "story.enter_the_nether": [2, 3],
-    "nether.find_bastion": [3, 3],
-    "nether.find_fortress": [4, 3],
-    "projectelo.timeline.blind_travel": [1, 4],
-    "story.follow_ender_eye": [2, 4],
-    "story.enter_the_end": [3, 4],
-  };
+  const SIZE = 16;
+  const SCALE = 2.125;
 
-  const [x, y] = lut[props.type] ?? [1, 1];
-  const size = 16;
-  const scale = 2.125;
+  if (!(props.timeline in TIMELINES)) {
+    return null;
+  }
 
-  const bpX = x * size * scale;
-  const bpY = y * size * scale;
+  const { spriteCoords } = TIMELINES[props.timeline as keyof typeof TIMELINES];
+
+  const bpX = spriteCoords[0] * SIZE * SCALE;
+  const bpY = spriteCoords[1] * SIZE * SCALE;
 
   return (
     <span
       className={clsx("inline-block indicator-item", props.className)}
       style={{
-        width: size * scale,
-        height: size * scale,
+        width: SIZE * SCALE,
+        height: SIZE * SCALE,
         backgroundImage: `url(${props.basePath}/structure-icons.png)`,
-        backgroundSize: 64 * scale,
+        backgroundSize: 64 * SCALE,
         imageRendering: "pixelated",
         backgroundPosition: `right ${bpX}px bottom ${bpY}px`,
       }}
-      data-timeline={props.type}
     />
   );
+}
+
+function useTimeline(match: DataLive["liveMatches"][0]) {
+  const p1 = match.data[match.players[0].uuid];
+  const p2 = match.data[match.players[1].uuid];
+
+  if (!p1.timeline || !p2.timeline) {
+    return { kind: "NEW" } as const;
+  }
+
+  if (p1.timeline?.type !== p2.timeline?.type) {
+    return {
+      kind: "GAPPED",
+      gapped: !cmpTimeline(p1.timeline.type, p2.timeline.type),
+    } as const;
+  }
+
+  let diff = Math.abs(p1.timeline.time - p2.timeline.time);
+  if (p1.timeline.time < p2.timeline.time) {
+    diff = -diff;
+  }
+
+  return { kind: "DIFF", diff } as const;
+}
+
+function cmpTimeline(t1: string, t2: string) {
+  return TIMELINES[t1 as keyof typeof TIMELINES].ord >
+    TIMELINES[t2 as keyof typeof TIMELINES].ord;
 }
 
 function MultitwitchLink(props: {
