@@ -383,8 +383,11 @@ function Bust(
           type={props.timeline?.type || "overworld"}
         />
         <img
-          className="size-[100px] image-pixel-art"
-          src={`https://minotar.net/bust/${props.user.nickname}/100`}
+          className={clsx(
+            "size-[100px]",
+            props.align === "right" && "-scale-x-100",
+          )}
+          src={`https://nmsr.nickac.dev/bust/${props.user.nickname}`}
           alt={props.user.nickname}
         />
       </div>
