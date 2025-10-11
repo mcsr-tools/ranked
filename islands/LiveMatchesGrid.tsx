@@ -459,6 +459,9 @@ function TimelineImage(props: {
   const size = 16;
   const scale = 2.125;
 
+  const bpX = x * size * scale;
+  const bpY = y * size * scale;
+
   return (
     <span
       className={clsx("inline-block indicator-item", props.className)}
@@ -468,8 +471,7 @@ function TimelineImage(props: {
         backgroundImage: `url(${props.basePath}/structure-icons.png)`,
         backgroundSize: 64 * scale,
         imageRendering: "pixelated",
-        backgroundPositionX: `right ${x * 16 * scale}px`,
-        backgroundPositionY: `bottom ${y * 16 * scale}px`,
+        backgroundPosition: `right ${bpX}px bottom ${bpY}px`,
       }}
       data-timeline={props.type}
     />
