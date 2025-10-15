@@ -42,7 +42,6 @@ export function LiveMatchesGrid(props: {
     }
     return null;
   })());
-  console.log(filter.value);
 
   const liveMatches = useComputed(() =>
     props.data.liveMatches
