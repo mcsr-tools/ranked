@@ -60,6 +60,25 @@ export function LiveMatchesGrid(props: {
             .find((rank) => rank <= 150)
           : true
       )
+      .sort((a, b) => {
+        function furthestTimeline(match: typeof a) {
+          const timelines = Object.values(match.data)
+            .map((it) => it.timeline?.type)
+            .filter(isNotNullable)
+            .filter((s): s is keyof typeof TIMELINES => s in TIMELINES)
+            .map((t) => TIMELINES[t]);
+          if (!timelines.length) {
+            return 0;
+          }
+          return Math.max(...timelines.map((t) => t.ord));
+        }
+        const t1 = furthestTimeline(a);
+        const t2 = furthestTimeline(b);
+        if (t1 === t2) {
+          return a.currentTime - b.currentTime;
+        }
+        return t1 - t2;
+      })
   );
 
   useSignalEffect(() => {
