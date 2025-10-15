@@ -6,7 +6,8 @@ import { DataLive, ObjectUserProfile } from "#/mcsrranked/types.ts";
 import { API_CACHE_MS_LIVE_MATCHES } from "#/mcsrranked/constants.ts";
 import { channelFromURL } from "#/twitch/helpers.ts";
 import { isInteger, isNotNullable } from "#/lib/filter.ts";
-import { RankImage } from "#/components/ui/mod.ts";
+import { RankImage } from "#/components/ui/RankImage.tsx";
+import { dfAutoFormat } from "#/lib/time.ts";
 import { RelativeTime } from "./RelativeTime.tsx";
 import { LastUpdated } from "./LastUpdated.tsx";
 
@@ -196,31 +197,35 @@ function Match(props: {
               : null,
           )}
         >
-          <div className="flex flex-col justify-center items-center gap-1">
-            {rank
-              ? (
-                <RankImage
-                  className="size-7"
-                  rank={rank}
-                  basePath={props.basePath}
-                  data-fresh-disable-lock
-                />
-              )
-              : (
-                <span className="h-7 text-center font-ranked text-lg">
-                  ???
-                </span>
-              )}
-            <p className="text-xs text-neutral-300">
-              Started{" "}
-              <RelativeTime
-                date={props.now -
-                  (props.now - props.liveDataLastUpdatedAt +
-                    props.match.currentTime)}
-              />
+          <div className="flex justify-center items-center content-between gap-1">
+            <div class="flex items-center">
+              {rank
+                ? (
+                  <RankImage
+                    className="size-7"
+                    rank={rank}
+                    basePath={props.basePath}
+                    data-fresh-disable-lock
+                  />
+                )
+                : (
+                  <span className="h-7 text-center font-ranked text-lg">
+                    ???
+                  </span>
+                )}
+            </div>
+            <p class="font-mono text-base-content flex flex-col items-end text-sm">
+              <RelativeTime date={props.liveDataLastUpdatedAt}>
+                {(ms) => (
+                  <span>RTA {dfAutoFormat(props.match.currentTime + ms)}</span>
+                )}
+              </RelativeTime>
+              <span class="text-neutral-400">
+                API {dfAutoFormat(props.match.currentTime)}
+              </span>
             </p>
           </div>
-          <div className="w-full mt-2.5">
+          <div className="w-full mt-4">
             <div className="flex">
               <Bust
                 basePath={props.basePath}

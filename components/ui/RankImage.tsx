@@ -13,7 +13,7 @@ export function RankImage(
   return (
     <img
       className={clsx(className, "image-pixel-art")}
-      src={`${basePath}/ranks/${props.rank.toLowerCase()}.webp`}
+      src={`${basePath}/ranks/${props.rank.toLowerCase()}.png`}
       alt={rank}
       {...rest}
     />
