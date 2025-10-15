@@ -16,21 +16,24 @@ export function LiveMatchesGrid(props: {
   ranks: Rank[];
   top150Filterable?: boolean;
   basePath: string;
-  searchParams: Record<string, string>;
+  searchParams: Record<string, string | string[]>;
 }) {
   const now = useSignal(Date.now());
 
   const filter = useSignal<
-    | { kind: "rank"; rank: Rank }
+    | { kind: "rank"; ranks: Rank[] }
     | { kind: "top-150" }
     | null
   >((() => {
     const filter = props.searchParams["filter"];
     switch (filter) {
       case "rank": {
-        const rank = props.searchParams["rank"];
-        if (!isRank(rank) || !props.ranks.includes(rank)) break;
-        return { kind: filter, rank };
+        const searchRank = props.searchParams["rank"];
+        const ranks = (Array.isArray(searchRank) ? searchRank : [searchRank])
+          .filter(isRank)
+          .filter((rank) => props.ranks.includes(rank));
+        if (!ranks.length) break;
+        return { kind: filter, ranks };
       }
       case "top-150": {
         if (!props.top150Filterable) break;
@@ -39,17 +42,20 @@ export function LiveMatchesGrid(props: {
     }
     return null;
   })());
+  console.log(filter.value);
 
   const liveMatches = useComputed(() =>
     props.data.liveMatches
       .filter((match) =>
         filter.value?.kind === "rank"
-          ? filter.value.rank === findRank(
-            Math.max(
-              ...match.players
-                .map((player) => player.eloRate)
-                .filter(isInteger),
-            ),
+          ? filter.value.ranks.includes(
+            findRank(
+              Math.max(
+                ...match.players
+                  .map((player) => player.eloRate)
+                  .filter(isInteger),
+              ),
+            )!,
           )
           : true
       ).filter((match) =>
@@ -90,7 +96,9 @@ export function LiveMatchesGrid(props: {
     if (filter.value) {
       params.set("filter", encodeURIComponent(filter.value.kind));
       if (filter.value.kind === "rank") {
-        params.set("rank", encodeURIComponent(filter.value.rank));
+        for (const rank of filter.value.ranks) {
+          params.append("rank", encodeURIComponent(rank));
+        }
       }
     }
 
@@ -108,17 +116,27 @@ export function LiveMatchesGrid(props: {
             {props.ranks.length > 0 && (
               <FilterRanks
                 ranks={props.ranks}
-                value={filter.value?.kind === "rank" ? filter.value.rank : null}
+                value={filter.value?.kind === "rank"
+                  ? filter.value.ranks
+                  : null}
                 basePath={props.basePath}
                 onChange={(rank) => {
-                  if (
-                    filter.value?.kind === "rank" && filter.value.rank === rank
-                  ) {
-                    filter.value = null;
+                  if (filter.value?.kind === "rank") {
+                    const ranks = filter.value.ranks.includes(rank)
+                      ? filter.value.ranks.filter((it) => it !== rank)
+                      : [...filter.value.ranks, rank];
+                    if (!ranks.length) {
+                      filter.value = null;
+                    } else {
+                      filter.value = {
+                        kind: "rank",
+                        ranks,
+                      };
+                    }
                   } else {
                     filter.value = {
                       kind: "rank",
-                      rank,
+                      ranks: [rank],
                     };
                   }
                 }}
@@ -273,7 +291,7 @@ function Match(props: {
 
 function FilterRanks(props: {
   ranks: Rank[];
-  value: Rank | null;
+  value: Rank[] | null;
   basePath: string;
   onChange: (rank: Rank) => void;
 }) {
@@ -283,7 +301,7 @@ function FilterRanks(props: {
         <button
           className={clsx(
             "btn btn-sm btn-soft join-item",
-            props.value === rank && "btn-active",
+            props.value?.includes(rank) && "btn-active",
           )}
           type="button"
           onClick={() => props.onChange(rank)}

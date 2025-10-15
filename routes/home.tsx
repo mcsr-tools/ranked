@@ -28,7 +28,7 @@ export default async function HomePage(_req: Request, ctx: FreshContext) {
       <LiveMatches
         data={liveData}
         basePath={ctx.basePath}
-        searchParams={Object.fromEntries(ctx.url.searchParams)}
+        searchParams={fromSearchParams(ctx.url.searchParams)}
       />
     </div>
   );
@@ -37,3 +37,22 @@ export default async function HomePage(_req: Request, ctx: FreshContext) {
 export const config: RouteConfig = {
   routeOverride: `(${BASE_PATH || "/"}|${BASE_PATH || ""}/watch)`,
 };
+
+export function fromSearchParams(
+  params: URLSearchParams,
+): Record<string, string | string[]> {
+  const result: Record<string, string | string[]> = {};
+  for (const [key, value] of params) {
+    if (key in result) {
+      const existing = result[key];
+      if (Array.isArray(existing)) {
+        existing.push(value);
+      } else {
+        result[key] = [existing, value];
+      }
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
