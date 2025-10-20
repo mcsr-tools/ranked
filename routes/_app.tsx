@@ -36,6 +36,10 @@ export default async function App(_req: Request, ctx: FreshContext) {
           href={`${basePath}/favicon-16x16.png`}
         />
         <title>MCSR Ranked Watch</title>
+        <meta
+          name="description"
+          content="Ranked Watch is your go-to MCSR Ranked fan site to see ongoing matches currently being streamed and more!"
+        />
         <link
           rel="stylesheet"
           href={`${basePath}/font?family=Ranked&name=Gamer&ext=ttf&adjust=150`}

@@ -1,4 +1,5 @@
 import { FreshContext, RouteConfig } from "$fresh/server.ts";
+import { Head } from "$fresh/runtime.ts";
 import { LiveMatches } from "#/components/mod.ts";
 import { getLiveMatches } from "#/mcsrranked/mod.ts";
 
@@ -24,13 +25,21 @@ export default async function HomePage(_req: Request, ctx: FreshContext) {
   const liveData = await getLiveMatches();
 
   return (
-    <div>
-      <LiveMatches
-        data={liveData}
-        basePath={ctx.basePath}
-        searchParams={fromSearchParams(ctx.url.searchParams)}
-      />
-    </div>
+    <>
+      <Head>
+        <link
+          rel="canonical"
+          href="https://mcsr.tools/ranked/watch"
+        />
+      </Head>
+      <div>
+        <LiveMatches
+          data={liveData}
+          basePath={ctx.basePath}
+          searchParams={fromSearchParams(ctx.url.searchParams)}
+        />
+      </div>
+    </>
   );
 }
 
