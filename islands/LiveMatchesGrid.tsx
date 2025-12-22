@@ -448,9 +448,10 @@ function Bust(
         {props.user.country &&
           (
             <img
-              className="size-5"
+              className="size-5 text-info"
               src={`https://flagsapi.com/${props.user.country.toUpperCase()}/flat/64.png`}
               alt={props.user.country.toUpperCase()}
+              title={props.user.country.toUpperCase()}
             />
           )}
         <div className="flex gap-1 items-center truncate">
