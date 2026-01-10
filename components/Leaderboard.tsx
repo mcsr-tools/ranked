@@ -4,7 +4,6 @@ import {
   API_CACHE_MS_LEADERBOARD,
   DataUserData,
   LEADERBOARD_SIZE,
-  ObjectConnection,
   PopulatedLeaderboard,
 } from "#/mcsrranked/mod.ts";
 import { Stream } from "#/twitch/mod.ts";
@@ -192,7 +191,10 @@ function ListItem(
 }
 
 function Connections(props: {
-  connections: Record<string, ObjectConnection>;
+  connections: Record<string, {
+    id: string;
+    name: string;
+  }>;
 }) {
   return (
     <>

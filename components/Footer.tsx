@@ -32,9 +32,13 @@ export function Footer(props: { user: DataUserData }) {
             </span>{" "}
             |{" "}
             <span>
-              PB{" "}
-              {dayjs.duration(props.user.statistics.total.bestTime.ranked, "ms")
-                .format("mm:ss")}
+              PB {props.user.statistics.total.bestTime.ranked
+                ? dayjs.duration(
+                  props.user.statistics.total.bestTime.ranked,
+                  "ms",
+                )
+                  .format("mm:ss")
+                : "N/A"}
             </span>
           </span>
           <br />

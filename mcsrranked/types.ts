@@ -1,72 +1,28 @@
+import { components, paths } from "./openapi-schema.d.ts";
+
 export type PopulatedLeaderboard = Omit<DataLeaderboard, "users"> & {
   users: DataUserData[];
 };
 
 /** https://docs.mcsrranked.com/#leaderboard */
-export type DataLeaderboard = {
-  users: (ObjectUserProfile & {
-    seasonResult: {
-      eloRate: number;
-      eloRank: number;
-      phasePoint: number;
-    };
-  })[];
-};
+export type DataLeaderboard =
+  paths["/leaderboard"]["get"]["responses"]["200"]["content"][
+    "application/json"
+  ];
 
 /** https://docs.mcsrranked.com/#live- */
-export type DataLive = {
-  players: number;
-  liveMatches: {
-    currentTime: number;
-    players: ObjectUserProfile[];
-    data: Record<string, {
-      liveUrl?: string;
-      timeline: null | {
-        time: number;
-        type: string;
-      };
-    }>;
-  }[];
-};
+export type DataLive = paths["/live"]["get"]["responses"]["200"]["content"][
+  "application/json"
+];
 
 /** https://docs.mcsrranked.com/#users-identifier */
-export type DataUserData = ObjectUserProfile & {
-  connections: Record<string, ObjectConnection>;
-  seasonResult: {
-    phase: number;
-    eloRate: number | null;
-    eloRank: number | null;
-    point: number;
-  };
-  timestamp: {
-    firstOnline: number;
-    lastOnline: number;
-    lastRanked: number;
-    nextDecay: number | null;
-  };
-  statistics: {
-    total: {
-      bestTime: {
-        ranked: number;
-      };
-    };
-  };
-};
+export type DataUserData =
+  paths["/users/{identifier}"]["get"]["responses"]["200"]["content"][
+    "application/json"
+  ];
 
 /** https://docs.mcsrranked.com/#objects-userprofile */
-export type ObjectUserProfile = {
-  uuid: string;
-  nickname: string;
-  roleType: number;
-  eloRate: number | null;
-  eloRank: number | null;
-  country?: string;
-};
-
-export type ObjectConnection = {
-  id: string;
-  name: string;
-};
+export type ObjectUserProfile = components["schemas"]["UserProfile"];
 
 export type Result<T> = Success<T> | Error<T>;
 
